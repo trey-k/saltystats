@@ -2,7 +2,7 @@
 // @name         SaltyStats
 // @namespace    https://rokit.dev
 // @author       trey-k (roguerobots)
-// @version      1
+// @version      1.1
 // @description  Makes SaltyBet tournament stats easier to read
 // @include      /^.*saltybet\.com\/stats\?tournament_id?(.*)*$/
 // @run-at       document-body
@@ -72,25 +72,30 @@ $(document).ready(function() {
             $(tds[0]).remove();
             $(tds[1]).remove();
             dissect = dissect.match(/(.*)\s-\s\$(\d*),\s(.*)\s-\s\$(\d*)/);
-            if (parseInt(dissect[2]) >= parseInt(dissect[4])) {
-                p1odds = Math.round((dissect[2] / dissect[4]) * 10) / 10;
+            if (dissect[2] && dissect[4]) {
+                if (parseInt(dissect[2]) >= parseInt(dissect[4])) {
+                    p1odds = Math.round((dissect[2] / dissect[4]) * 10) / 10;
+                } else {
+                    p2odds = Math.round((dissect[4] / dissect[2]) * 10) / 10;
+                }
             } else {
-                p2odds = Math.round((dissect[4] / dissect[2]) * 10) / 10;
+                p1odds = 0;
+                p2odds = 0;
             }
             $(this).prepend('<td class="red ' + (winner.includes('redtext') ? 'winner' : '') + '"><a href="' + url + '"><span class="redtext">' + dissect[1] + '</span></a></td>' +
-                '<td class="pbet">' + dissect[2] + '</td>' +
+                '<td class="pbet">' + (dissect[2] || 0) + '</td>' +
                 '<td class="ratio"><span class="redtext">' + p1odds + '</span> : <span class="bluetext">' + p2odds + '</span></td>' +
-                '<td class="pbet">' + dissect[4] + '</td>' +
+                '<td class="pbet">' + (dissect[4] || 0) + '</td>' +
                 '<td class="blue ' + (winner.includes('bluetext') ? 'winner' : '') + '"><a href="' + url + '"><span class="bluetext">' + dissect[3] + '</span></a></td>');
         });
         $('.leaderboard').dataTable({
-            "bPaginate": false,
-            "bLengthChange": false,
-            "aaSorting": [],
-            "aoColumnDefs": [{
-                "aTargets": [ 2 ],
-                "mRender": function ( data, type, full ) {
-                    if(type === "display") {
+            'bPaginate': false,
+            'bLengthChange': false,
+            'aaSorting': [],
+            'aoColumnDefs': [{
+                'aTargets': [ 2 ],
+                'mRender': function ( data, type, full ) {
+                    if(type === 'display') {
                         return data;
                     }
                     var ratio = data.split(':');
@@ -99,7 +104,11 @@ $(document).ready(function() {
             }]
         });
         $('.pbet').each(function () {
-            $(this).text('$' + parseBet($(this).text()));
+            if ($(this).text() === '0') {
+                $(this).text('OPEN');
+            } else {
+                $(this).text('$' + parseBet($(this).text()));
+            }
         });
     }, 500);
 });
